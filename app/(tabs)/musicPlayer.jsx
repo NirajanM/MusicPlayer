@@ -7,7 +7,19 @@ import * as Progress from 'react-native-progress';
 
 class MusicItem extends React.PureComponent {
     render() {
-        const { item, index, playing, playMusic, pauseMusic, progressDuration } = this.props;
+        const { item, index, playing, playMusic, pauseMusic, progressDuration, setPlaying } = this.props;
+
+        const secondsToHms = (d) => {
+            d = Number(d);
+            var h = Math.floor(d / 3600);
+            var m = Math.floor(d % 3600 / 60);
+            var s = Math.floor(d % 3600 % 60);
+
+            var hDisplay = h > 0 ? h + (h == 1 ? ' hour, ' : ' hours, ') : '';
+            var mDisplay = m > 0 ? m + (m == 1 ? ' minute, ' : ' minutes, ') : '';
+            var sDisplay = s > 0 ? s + (s == 1 ? ' second' : ' seconds') : '';
+            return hDisplay + mDisplay + sDisplay;
+        };
 
         return (
             <View key={index}>
@@ -63,7 +75,7 @@ export default function App() {
         if (status === 'granted') {
             const media = await MediaLibrary.getAssetsAsync({
                 mediaType: MediaLibrary.MediaType.audio,
-                first: 10000, // Adjust the limit as needed
+                first: 10000,
                 sortBy: MediaLibrary.SortBy.default,
             });
             setMusicFiles(media.assets);
@@ -111,18 +123,6 @@ export default function App() {
         fetchMusicFiles();
     }, [fetchMusicFiles]);
 
-    function secondsToHms(d) {
-        d = Number(d);
-        var h = Math.floor(d / 3600);
-        var m = Math.floor(d % 3600 / 60);
-        var s = Math.floor(d % 3600 % 60);
-
-        var hDisplay = h > 0 ? h + (h == 1 ? ' hour, ' : ' hours, ') : '';
-        var mDisplay = m > 0 ? m + (m == 1 ? ' minute, ' : ' minutes, ') : '';
-        var sDisplay = s > 0 ? s + (s == 1 ? ' second' : ' seconds') : '';
-        return hDisplay + mDisplay + sDisplay;
-    }
-
     return (
         <View style={styles.container}>
             <SafeAreaView style={styles.list}>
@@ -136,6 +136,7 @@ export default function App() {
                             playMusic={playMusic}
                             pauseMusic={pauseMusic}
                             progressDuration={progressDuration}
+                            setPlaying={setPlaying} // Pass setPlaying as a prop
                         />
                     )}
                     keyExtractor={(item, index) => index.toString()}
