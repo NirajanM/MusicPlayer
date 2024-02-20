@@ -12,7 +12,17 @@ import { Audio } from "expo-av";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Progress from "react-native-progress";
 
-class MusicItem extends React.PureComponent {
+interface MusicItemProps {
+  item: any; // Replace 'any' with the actual type
+  index: number;
+  playing: number;
+  playMusic: (uri: string) => void;
+  pauseMusic: () => void;
+  progressDuration: number;
+  setPlaying: (index: number) => void;
+}
+
+class MusicItem extends React.PureComponent<MusicItemProps> {
   render() {
     const {
       item,
@@ -24,7 +34,7 @@ class MusicItem extends React.PureComponent {
       setPlaying,
     } = this.props;
 
-    const secondsToHms = (d) => {
+    const secondsToHms = (d: number) => {
       d = Number(d);
       var h = Math.floor(d / 3600);
       var m = Math.floor((d % 3600) / 60);
@@ -88,10 +98,10 @@ class MusicItem extends React.PureComponent {
 }
 
 export default function App() {
-  const [musicFiles, setMusicFiles] = useState([]);
-  const [playing, setPlaying] = useState(-1);
-  const [sound, setSound] = useState(null);
-  const [progressDuration, setProgressDuration] = useState(0);
+  const [musicFiles, setMusicFiles] = useState<any[]>([]); // Replace 'any' with the actual type
+  const [playing, setPlaying] = useState<number>(-1);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [progressDuration, setProgressDuration] = useState<number>(0);
 
   const fetchMusicFiles = useCallback(async () => {
     const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -108,7 +118,7 @@ export default function App() {
   }, []);
 
   const playMusic = useCallback(
-    async (fileUri) => {
+    async (fileUri: string) => {
       const { sound } = await Audio.Sound.createAsync({
         uri: fileUri,
       });
@@ -119,7 +129,9 @@ export default function App() {
   );
 
   const pauseMusic = useCallback(async () => {
-    await sound.pauseAsync();
+    if (sound) {
+      await sound.pauseAsync();
+    }
   }, [sound]);
 
   useEffect(() => {
@@ -127,14 +139,16 @@ export default function App() {
       return;
     }
 
-    sound.setOnPlaybackStatusUpdate(async (status) => {
-      if (status.didJustFinish) {
-        setPlaying(-1);
-        await sound.unloadAsync();
-        console.log("finished");
-        setSound(null);
-      } else {
-        setProgressDuration(status.positionMillis / 1000);
+    sound.setOnPlaybackStatusUpdate(async (status: Audio.SoundStatus) => {
+      if (status.isLoaded) {
+        if (status.didJustFinish) {
+          setPlaying(-1);
+          await sound.unloadAsync();
+          console.log("finished");
+          setSound(null);
+        } else {
+          setProgressDuration(status.positionMillis / 1000);
+        }
       }
     });
   }, [sound]);
